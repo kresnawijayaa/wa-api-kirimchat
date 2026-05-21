@@ -1,0 +1,43 @@
+wa.kresnawijaya.web.id {
+    log {
+        output file /data/wa-verification-access.log
+    }
+
+    @blocked_files {
+        path *.env*
+        path *.git*
+        path *.sql*
+        path /wp-config.php
+        path /phpinfo.php
+    }
+    respond @blocked_files "Not Found" 404
+
+    @bot_scanners {
+        path *.php
+    }
+    abort @bot_scanners
+
+    reverse_proxy wa-verification-frontend:3000
+}
+
+wa-api.kresnawijaya.web.id {
+    log {
+        output file /data/wa-verification-api-access.log
+    }
+
+    @blocked_files {
+        path *.env*
+        path *.git*
+        path *.sql*
+        path /wp-config.php
+        path /phpinfo.php
+    }
+    respond @blocked_files "Not Found" 404
+
+    @bot_scanners {
+        path *.php
+    }
+    abort @bot_scanners
+
+    reverse_proxy wa-verification-backend:4000
+}

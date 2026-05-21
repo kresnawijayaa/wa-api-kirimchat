@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model VerificationRequest {
+  id              String             @id @default(cuid())
+  phone           String
+  normalizedPhone String
+  tokenHash       String
+  tokenPreview    String
+  messageText     String
+  status          VerificationStatus @default(PENDING)
+
+  waSender        String?
+  waMessageId     String?
+  rawWebhook      Json?
+
+  expiredAt       DateTime
+  verifiedAt      DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([normalizedPhone])
+  @@index([status])
+  @@index([expiredAt])
+  @@index([tokenHash])
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  EXPIRED
+  FAILED
+  BLOCKED
+}

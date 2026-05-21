@@ -1,0 +1,50 @@
+services:
+  wa-verification-postgres:
+    image: postgres:16-alpine
+    container_name: wa-verification-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: wa_verification
+    volumes:
+      - wa_verification_postgres_data:/var/lib/postgresql/data
+    networks:
+      - wa-verification
+
+  wa-verification-backend:
+    build:
+      context: ./backend
+    container_name: wa-verification-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - wa-verification-postgres
+    networks:
+      - wa-verification
+      - caddy
+    command: sh -c "npx prisma migrate deploy && npm run start:prod"
+
+  wa-verification-frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    container_name: wa-verification-frontend
+    restart: unless-stopped
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - wa-verification-backend
+    networks:
+      - wa-verification
+      - caddy
+
+volumes:
+  wa_verification_postgres_data:
+
+networks:
+  wa-verification:
+  caddy:
+    external: true
