@@ -102,6 +102,10 @@ export class VerificationService {
 
     if (!token) {
       console.warn('Webhook ignored: token verifikasi tidak ditemukan.', { normalizedSender });
+      await this.sendKirimChatReply(
+        normalizedSender,
+        'Kode verifikasi tidak ditemukan. Mohon kirim ulang teks verifikasi dari website tanpa mengubah isi pesan.',
+      );
       return { ok: true };
     }
 
@@ -126,6 +130,10 @@ export class VerificationService {
         normalizedSender,
         tokenPreview: previewToken(token),
       });
+      await this.sendKirimChatReply(
+        normalizedSender,
+        'Kode verifikasi tidak sesuai, sudah kedaluwarsa, atau sudah digunakan. Silakan buat kode verifikasi baru di website.',
+      );
       return { ok: true };
     }
 
@@ -140,12 +148,63 @@ export class VerificationService {
       },
     });
 
+    await this.sendKirimChatReply(
+      normalizedSender,
+      'Verifikasi berhasil. Nomor WhatsApp kamu sudah terverifikasi.',
+    );
+
     console.log('Verification request marked VERIFIED.', {
       id: request.id,
       normalizedSender,
     });
 
     return { ok: true };
+  }
+
+  private async sendKirimChatReply(phoneNumber: string, content: string) {
+    const apiKey = process.env.KIRIM_CHAT_API_KEY || process.env.KIRIM_CHAT_API_TOKEN;
+
+    if (!apiKey) {
+      console.warn('KirimChat reply skipped: KIRIM_CHAT_API_KEY belum dikonfigurasi.', { phoneNumber });
+      return;
+    }
+
+    try {
+      const response = await fetch('https://api-prod.kirim.chat/api/v1/public/messages/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + apiKey,
+        },
+        body: JSON.stringify({
+          phone_number: phoneNumber,
+          channel: 'whatsapp',
+          message_type: 'text',
+          content,
+        }),
+      });
+
+      const responseBody = await response.text();
+
+      if (!response.ok) {
+        console.warn('KirimChat reply failed.', {
+          phoneNumber,
+          status: response.status,
+          responseBody,
+        });
+        return;
+      }
+
+      console.log('KirimChat reply sent.', {
+        phoneNumber,
+        status: response.status,
+      });
+    } catch (error) {
+      console.warn('KirimChat reply failed with exception.', {
+        phoneNumber,
+        error,
+      });
+    }
   }
 
   private async assertRateLimit(normalizedPhone: string) {

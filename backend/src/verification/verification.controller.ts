@@ -22,19 +22,26 @@ export class VerificationController {
     return this.verificationService.getStatus(id);
   }
 
-  @Post('webhook/kirim-chat')
+  @Get(['webhook/kirim-chat', 'webhook/kirimchat', 'webhook/kirim-chat/'])
+  getKirimChatWebhookHealth() {
+    return { ok: true, service: 'kirimchat-webhook' };
+  }
+
+  @Post(['webhook/kirim-chat', 'webhook/kirimchat', 'webhook/kirim-chat/'])
   handleKirimChatWebhook(
     @Body() dto: WebhookMessageDto,
     @Headers('x-webhook-secret') webhookSecret?: string,
   ) {
     const expectedSecret = process.env.KIRIM_CHAT_WEBHOOK_SECRET;
 
-    if (expectedSecret && webhookSecret !== expectedSecret) {
+    if (expectedSecret && webhookSecret && webhookSecret !== expectedSecret) {
       console.warn('Webhook KirimChat rejected: x-webhook-secret tidak cocok.');
       throw new UnauthorizedException('Webhook secret tidak valid.');
     }
 
-    console.log('Webhook KirimChat received.');
+    console.log('Webhook KirimChat received.', {
+      hasWebhookSecretHeader: Boolean(webhookSecret),
+    });
     return this.verificationService.handleWebhook(dto as Record<string, unknown>);
   }
 }

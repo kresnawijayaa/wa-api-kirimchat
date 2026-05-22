@@ -1,7 +1,11 @@
 import { BadRequestException } from '@nestjs/common';
 
 export function normalizeIndonesianPhone(phone: string) {
-  const cleaned = phone.replace(/[\s\-().]/g, '').replace(/^\+/, '');
+  const cleaned = phone
+    .split('@')[0]
+    .replace(/:\d+$/, '')
+    .replace(/[\s\-().]/g, '')
+    .replace(/^\+/, '');
 
   if (!/^\d+$/.test(cleaned)) {
     throw new BadRequestException('Nomor WhatsApp hanya boleh berisi angka dan tanda format umum.');

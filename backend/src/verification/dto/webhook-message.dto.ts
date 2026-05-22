@@ -14,6 +14,12 @@ export class WebhookMessageDto {
   phone?: unknown;
 
   @IsOptional()
+  customer_phone?: unknown;
+
+  @IsOptional()
+  phone_number?: unknown;
+
+  @IsOptional()
   text?: unknown;
 
   @IsOptional()
@@ -23,7 +29,16 @@ export class WebhookMessageDto {
   body?: unknown;
 
   @IsOptional()
+  content?: unknown;
+
+  @IsOptional()
+  text_message?: unknown;
+
+  @IsOptional()
   id?: unknown;
+
+  @IsOptional()
+  messageId?: unknown;
 
   @IsOptional()
   data?: unknown;
